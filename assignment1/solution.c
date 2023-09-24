@@ -82,8 +82,8 @@ static void merge_sort(int* arr, int l, int r, struct context_worker *ctx) {
     free(right);
 }
 
-double time_in_milliseconds(uint64_t duration) {
-    return ((double) duration / 1e3);
+double time_in_milliseconds(uint64_t time_in_microseconds) {
+    return ((double) time_in_microseconds / 1e3);
 }
 
 static int coroutine_func_f(void *context) {
