@@ -48,8 +48,6 @@ static void merge_sort(int* arr, int l, int r, struct context_worker *ctx) {
 
     int mid = (l + r) / 2;
 
-    yield_check(ctx);
-
     merge_sort(arr, l, mid, ctx);
     merge_sort(arr, mid + 1, r, ctx);
 
@@ -70,6 +68,7 @@ static void merge_sort(int* arr, int l, int r, struct context_worker *ctx) {
             arr[arr_idx++] = left[left_idx++];
         else
             arr[arr_idx++] = right[right_idx++];
+        yield_check(ctx);
     }
 
     while (left_idx < left_len)
@@ -112,12 +111,11 @@ static int coroutine_func_f(void *context) {
         }
         fclose(file);
 
-        yield_check(ctx);
-
         ctx->sorted_files_array[cur_file_idx] = arr;
         ctx->sorted_files_sizes[cur_file_idx] = arr_len;
-
         merge_sort(arr, 0, arr_len - 1, ctx);
+
+        yield_check(ctx);
     }
 
     ctx->num_switches = coro_switch_count(this);
