@@ -15,7 +15,6 @@
 struct context_worker {
     int coro_id;
     uint64_t total_work_time;
-    uint64_t* global_work_time;
     int num_switches;
     int num_files;
     int *current_file_ptr;
@@ -125,12 +124,12 @@ static int coroutine_func_f(void *context) {
     printf("Coroutine Total Work Time: %fms\n", time_in_milliseconds(ctx->total_work_time));
     printf("Number of Context Switches: %d\n\n", ctx->num_switches);
 
-    (*ctx->global_work_time) += ctx->total_work_time;
-
     return 0;
 }
 
 int main(int argc, char **argv) {
+    uint64_t main_start_time = get_time();
+
     int num_coroutines = 0;
     int target_latency = 0;
 
@@ -166,8 +165,6 @@ int main(int argc, char **argv) {
     int **sorted_files_array = malloc(sizeof(int *) * files_count);
     size_t *sorted_files_sizes = malloc(sizeof(size_t) * files_count);
 
-    uint64_t global_work_time = 0;
-
     coro_sched_init();
 
     // Start several coroutines
@@ -175,7 +172,6 @@ int main(int argc, char **argv) {
     for (int i = 0; i < num_coroutines; i++) {
         coroutine_contexts[i].coro_id = i + 1;
         coroutine_contexts[i].total_work_time = 0;
-        coroutine_contexts[i].global_work_time = &global_work_time;
         coroutine_contexts[i].num_switches = 0;
         coroutine_contexts[i].num_files = files_count;
         coroutine_contexts[i].current_file_ptr = &current_file_ptr;
@@ -193,7 +189,7 @@ int main(int argc, char **argv) {
         coro_delete(c);
     }
     printf("Couroutines finished\n");
-    printf("Total work time: %fms\n", time_in_milliseconds(global_work_time));
+    printf("Total work time: %fms\n", time_in_milliseconds(get_time() - main_start_time));
 
     free(coroutine_contexts);
 
