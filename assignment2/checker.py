@@ -103,11 +103,12 @@ for section_i, section in enumerate(tests, 1):
 		break
 	command += 'echo "{}Section {}"\n'.format(prefix, section_i)
 	for test_i, test in enumerate(section, 1):
-		command += 'echo "$> Test {}"\n'.format(test_i)
+		command += 'echo "$ Test {}"\n'.format(test_i)
 		command += '{}\n'.format(test)
 
 p = open_new_shell()
 try:
+	print(command.encode())
 	output = p.communicate(command.encode(), 3)[0].decode()
 except subprocess.TimeoutExpired:
 	print('Too long no output. Probably you forgot to process EOF')
@@ -115,6 +116,8 @@ except subprocess.TimeoutExpired:
 if p.returncode != 0:
 	print('Expected zero exit code')
 	finish(-1)
+
+print(output)
 
 if args.t:
 	print(output)
