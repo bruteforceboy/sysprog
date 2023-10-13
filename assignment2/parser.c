@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 struct parser {
 	char *buffer;
@@ -66,7 +67,7 @@ command_append_arg(struct command *cmd, char *arg)
 	if (cmd->arg_count == cmd->arg_capacity) {
 		cmd->arg_capacity = (cmd->arg_capacity + 1) * 2;
 		cmd->args = realloc(cmd->args, sizeof(*cmd->args) * cmd->arg_capacity);
-	} else {
+    } else {
 		assert(cmd->arg_count < cmd->arg_capacity);
 	}
 	cmd->args[cmd->arg_count++] = arg;
@@ -110,17 +111,20 @@ parser_new(void)
 void
 parser_feed(struct parser *p, const char *str, uint32_t len)
 {
-	uint32_t cap = p->capacity - p->size;
-	if (cap < len) {
+    uint32_t cap = p->capacity - p->size;
+	if (cap < len) {   
 		uint32_t new_capacity = (p->capacity + 1) * 2;
 		if (new_capacity - p->size < len)
 			new_capacity = p->size + len;
 		p->buffer = realloc(p->buffer, sizeof(*p->buffer) * new_capacity);
+        if (p->buffer == NULL) {
+            exit(EXIT_FAILURE);
+        }
 		p->capacity = new_capacity;
 	}
 	memcpy(p->buffer + p->size, str, len);
 	p->size += len;
-	assert(p->size <= p->capacity);
+    assert(p->size <= p->capacity);
 }
 
 static void
@@ -150,11 +154,13 @@ parse_token(const char *pos, const char *end, struct token *out)
 		++pos;
 	}
 	char quote = 0;
+    int open = 0;
 	while (pos < end) {
 		char c = *pos;
-		switch(c) {
+    	switch(c) {
 		case '\'':
 		case '"':
+            open ^= 1;
 			if (quote == 0) {
 				quote = c;
 				++pos;
@@ -162,8 +168,9 @@ parse_token(const char *pos, const char *end, struct token *out)
 					return 0;
 				continue;
 			}
-			if (quote != c)
+			if (quote != c) {
 				goto append_and_next;
+            }
 			out->type = TOKEN_TYPE_STR;
 			return pos + 1 - begin;
 		case '\\':
@@ -202,6 +209,9 @@ parse_token(const char *pos, const char *end, struct token *out)
 		case '&':
 		case '|':
 		case '>':
+            if (open == 1) {
+                goto append_and_next;
+            }
 			if (out->size > 0) {
 				out->type = TOKEN_TYPE_STR;
 				return pos - begin;
@@ -286,22 +296,22 @@ enum parser_error
 parser_pop_next(struct parser *p, struct command_line **out)
 {
 	struct command_line *line = calloc(1, sizeof(*line));
-	char *pos = p->buffer;
+    char *pos = p->buffer;
 	const char *begin = pos;
 	char *end = pos + p->size;
-	struct token token = {0};
+    struct token token = {0};
 	enum parser_error res = PARSER_ERR_NONE;
 
 	while (pos < end) {
 		uint32_t used = parse_token(pos, end, &token);
-		if (used == 0)
+        if (used == 0)
 			goto return_no_line;
-		pos += used;
+        pos += used;
 		struct expr *e;
 		switch(token.type) {
 		case TOKEN_TYPE_STR:
 			if (line->tail != NULL && line->tail->type == EXPR_TYPE_COMMAND) {
-				command_append_arg(&line->tail->cmd, token_strdup(&token));
+                command_append_arg(&line->tail->cmd, token_strdup(&token));
 				continue;
 			}
 			e = calloc(1, sizeof(*e));
@@ -426,7 +436,7 @@ return_error:
 return_no_line:
 	command_line_delete(line);
 	*out = NULL;
-
+ 
 return_final:
 	free(token.data);
 	return res;

@@ -59,7 +59,7 @@ tests = [
 	"f = open('test.txt', 'w')\\n\\\n"\
 	"f.write('Text\\\\\\n')\\n\\\n"\
 	"f.close()\\n\" > test.py",
-"python test.py | exit 0",
+"python3 test.py | exit 0",
 "cat test.txt",
 ],
 [
@@ -103,13 +103,14 @@ for section_i, section in enumerate(tests, 1):
 		break
 	command += 'echo "{}Section {}"\n'.format(prefix, section_i)
 	for test_i, test in enumerate(section, 1):
-		command += 'echo "$ Test {}"\n'.format(test_i)
+		command += 'echo "$> Test {}"\n'.format(test_i)
 		command += '{}\n'.format(test)
 
 p = open_new_shell()
 try:
 	print(command.encode())
 	output = p.communicate(command.encode(), 3)[0].decode()
+	print(output)
 except subprocess.TimeoutExpired:
 	print('Too long no output. Probably you forgot to process EOF')
 	finish(-1)
@@ -212,6 +213,8 @@ except subprocess.TimeoutExpired:
 	is_error = True
 p.terminate()
 if not is_error and output != output_expected:
+	print(len(output))
+	print(len(output_expected))
 	print('Bad output for an extra big command')
 	is_error = True
 if not is_error and p.returncode != 0:
