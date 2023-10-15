@@ -1,5 +1,5 @@
 #include "parser.h"
-#include "command.h"
+#include "runcommand.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -10,24 +10,22 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#define BUFF_SIZE 1024
+
 static void execute_command_line(int* to_exit, const struct command_line *line, int* exit_code) {
     assert(line != NULL);
     execute_commands(line, to_exit, exit_code);
 }
 
 int main(void) {
-    // freopen("input.txt", "r", stdin);
-    // freopen("output.txt", "w", stdout);
-    size_t buf_size = 1024;
+    size_t buf_size = BUFF_SIZE;
     char *buf = (char *) malloc(buf_size);
     size_t rc;
     struct parser *p = parser_new();
     int to_exit = 0;
     int exit_code = 0;
-    size_t len = 0;
     while ((rc = read(STDIN_FILENO, buf, buf_size)) > 0) {
         parser_feed(p, buf, rc);
-        len += rc;
         struct command_line *line = NULL;
         while (true) {
             enum parser_error err = parser_pop_next(p, &line);
@@ -41,19 +39,13 @@ int main(void) {
             execute_command_line(&to_exit, line, &exit_code);
             command_line_delete(line);
             if (to_exit) {
+                free(buf);
                 parser_delete(p);
                 exit(exit_code);
             }
         }
-        if (len == buf_size) {
-            buf_size *= 2;
-            buf = (char*) realloc(buf, buf_size);
-            if (buf == NULL) {
-                fprintf(stderr, "realloc failed\n");
-                return 1;
-            }
-        }
     }
+    free(buf);
     parser_delete(p);
     return exit_code;
 }
