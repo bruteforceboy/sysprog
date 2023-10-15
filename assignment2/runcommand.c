@@ -139,7 +139,7 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
             if (last_bool != OR_BOOL)
                 write_to_output(input_fd, output_fd);
             last_bool = OR_BOOL;
-        } 
+        }
 
         e = e->next;
         first_expr = 0;
@@ -176,7 +176,8 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
 
 int execute_command(int first_expr, int last_expr, char *exe,
                     int args_count, char **args, int input_fd,
-                    int output_fd, int *to_exit, int *exit_code, int *last_bool, bool *cur_expr_val) {
+                    int output_fd, int *to_exit, int *exit_code, int *last_bool,
+                    bool *cur_expr_val) {
     char **new_args = (char **) malloc((args_count + 2) * sizeof(char *));
 
     if (new_args == NULL) {
