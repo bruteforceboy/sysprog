@@ -26,7 +26,7 @@ static bool contains_pipe(const struct command_line *line) {
 }
 
 static int execute_echo_to_shell(const struct expr *e) {
-    char **new_args = (char **)malloc((e->cmd.arg_count + 2) * sizeof(char *));
+    char **new_args = (char **) malloc((e->cmd.arg_count + 2) * sizeof(char *));
 
     if (new_args == NULL) {
         perror("malloc");
@@ -176,8 +176,8 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
 
 int execute_command(int first_expr, int last_expr, char *exe,
                     int args_count, char **args, int input_fd,
-                    int output_fd, int *to_exit, int *exit_code, int* last_bool, bool *cur_expr_val) {
-    char **new_args = (char **)malloc((args_count + 2) * sizeof(char *));
+                    int output_fd, int *to_exit, int *exit_code, int *last_bool, bool *cur_expr_val) {
+    char **new_args = (char **) malloc((args_count + 2) * sizeof(char *));
 
     if (new_args == NULL) {
         perror("malloc");
