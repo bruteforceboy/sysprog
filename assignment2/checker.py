@@ -108,17 +108,13 @@ for section_i, section in enumerate(tests, 1):
 
 p = open_new_shell()
 try:
-	print(command.encode())
 	output = p.communicate(command.encode(), 3)[0].decode()
-	print(output)
 except subprocess.TimeoutExpired:
 	print('Too long no output. Probably you forgot to process EOF')
 	finish(-1)
 if p.returncode != 0:
 	print('Expected zero exit code')
 	finish(-1)
-
-print(output)
 
 if args.t:
 	print(output)
@@ -213,8 +209,6 @@ except subprocess.TimeoutExpired:
 	is_error = True
 p.terminate()
 if not is_error and output != output_expected:
-	print(len(output))
-	print(len(output_expected))
 	print('Bad output for an extra big command')
 	is_error = True
 if not is_error and p.returncode != 0:
