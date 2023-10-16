@@ -54,7 +54,7 @@ static int execute_echo_to_shell(const struct expr *e) {
     free(new_args);
 }
 
-void write_to_output(int input_fd, int output_fd) {
+static void write_to_output(int input_fd, int output_fd) {
     char buffer[BUFF_SIZE];
     ssize_t bytes_read;
     while ((bytes_read = read(input_fd, buffer, sizeof(buffer))) > 0) {
