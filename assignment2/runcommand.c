@@ -13,6 +13,7 @@
 #define NO_BOOL -1
 
 #define MAX_CHILD_PROCS 10
+#define BUFF_SIZE 1024
 
 static bool contains_pipe(const struct command_line *line) {
     const struct expr *e = line->head;
@@ -54,17 +55,14 @@ static int execute_echo_to_shell(const struct expr *e) {
 }
 
 void write_to_output(int input_fd, int output_fd) {
-    char buffer[1024];
+    char buffer[BUFF_SIZE];
     ssize_t bytes_read;
-
     while ((bytes_read = read(input_fd, buffer, sizeof(buffer))) > 0) {
         write(output_fd, buffer, bytes_read);
     }
 }
 
 void execute_commands(const struct command_line *line, int *to_exit, int *exit_code) {
-    assert(line != NULL);
-
     const struct expr *e = line->head;
     int input_fd = STDIN_FILENO;
     int pipe_fd[2];
@@ -145,9 +143,8 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
         first_expr = 0;
     }
 
-    if (line->is_background) {
+    if (line->is_background) 
         return;
-    }
 
     bool waited = false;
 
@@ -159,9 +156,9 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
             waited = true;
             char *cur_exit_status = malloc(10);
             sprintf(cur_exit_status, "%d", WEXITSTATUS(status));
-            int value = atoi(cur_exit_status);
+            int exit_int_value = atoi(cur_exit_status);
             if (i == cur_proc - 1 && exit_set == 0) {
-                *exit_code = value;
+                *exit_code = exit_int_value;
             }
             free(cur_exit_status);
         }
