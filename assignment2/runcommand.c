@@ -7,6 +7,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <string.h>
+#include <ctype.h>
 
 #define AND_BOOL 1
 #define OR_BOOL 0
@@ -143,7 +144,7 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
         first_expr = 0;
     }
 
-    if (line->is_background) 
+    if (line->is_background)
         return;
 
     bool waited = false;
@@ -156,10 +157,16 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
             waited = true;
             char *cur_exit_status = malloc(10);
             sprintf(cur_exit_status, "%d", WEXITSTATUS(status));
-            int exit_int_value = atoi(cur_exit_status);
-            if (i == cur_proc - 1 && exit_set == 0) {
-                *exit_code = exit_int_value;
+
+            char *endptr;
+            long exit_long_value = strtol(cur_exit_status, &endptr, 10);
+            if (*endptr == '\0' && !isspace(*endptr)) {
+                int exit_int_value = (int) exit_long_value;
+                if (i == cur_proc - 1 && exit_set == 0) {
+                    *exit_code = exit_int_value;
+                }
             }
+
             free(cur_exit_status);
         }
         kill(child_procs[i], SIGKILL);
