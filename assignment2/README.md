@@ -1,5 +1,5 @@
 ## Assignment 2
 
 ### To run: 
-<code>gcc solution.c parser.c runcommand.c -Wextra -Werror -Wall -Wno-gnu-folding-constant</code> </br>
+<code>gcc runcommand.c solution.c parser.c -Wextra -Werror -Wall -Wno-gnu-folding-constant -Wimplicit-function-declaration</code> </br>
 <code>./a.out</code>

@@ -8,12 +8,12 @@
 #include <fcntl.h>
 #include <string.h>
 #include <ctype.h>
+#include <signal.h>
 
 #define AND_BOOL 1
 #define OR_BOOL 0
 #define NO_BOOL -1
 
-#define MAX_CHILD_PROCS 10
 #define BUFF_SIZE 1024
 
 static bool contains_pipe(const struct command_line *line) {
@@ -69,7 +69,6 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
     int pipe_fd[2];
 
 
-    pid_t *child_procs = (pid_t *) malloc(MAX_CHILD_PROCS * sizeof(pid_t));
     int cur_proc = 0;
     int first_expr = 1;
     int exit_set = 0;
@@ -94,6 +93,9 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
     bool cur_expr_val = true;
     int last_bool = NO_BOOL;
     int false_eval = 0;
+
+    int child_procs_count = 10;
+    pid_t *child_procs = (pid_t *) malloc(child_procs_count * sizeof(pid_t));
 
     while (e != NULL) {
         if (e->type == EXPR_TYPE_COMMAND) {
@@ -123,6 +125,15 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
                                           &last_bool,
                                           &cur_expr_val);
 
+            }
+            if (cur_proc == child_procs_count) {
+                child_procs_count *= 2;
+                pid_t *new_child_procs = (pid_t *) realloc(child_procs, child_procs_count * sizeof(pid_t));
+                if (new_child_procs == NULL) {
+                    perror("Failed to reallocate memory");
+                    exit(1);
+                }
+                child_procs = new_child_procs;
             }
             close(pipe_fd[1]);
             input_fd = pipe_fd[0];
