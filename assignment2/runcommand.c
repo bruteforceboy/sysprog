@@ -155,9 +155,6 @@ void execute_commands(const struct command_line *line, int *to_exit, int *exit_c
         first_expr = 0;
     }
 
-    if (line->is_background)
-        return;
-
     bool waited = false;
 
     for (int i = cur_proc - 1; i >= 0; i--) {
@@ -219,11 +216,13 @@ int execute_command(int first_expr, int last_expr, char *exe,
         } else if (first_expr == 1 && last_expr == 1) {
             *to_exit = 1;
             *exit_code = atoi(args[0]);
+            free(new_args);
             return 0;
         } else {
             if (args_count > 0) {
                 *exit_code = atoi(args[0]);
             }
+            free(new_args);
             return 0;
         }
     } else if (strcmp(exe, "false") == 0) {
