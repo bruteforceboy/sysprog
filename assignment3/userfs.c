@@ -77,7 +77,7 @@ ufs_errno() {
     return ufs_error_code;
 }
 
-static void resize_file_descriptor() {
+static void resize_file_descriptors() {
     int64_t resized_capacity = max(32LL, 2LL * file_descriptor_capacity);
     struct filedesc** resized_fd = realloc(file_descriptors, sizeof(struct filedesc*)
                                            * resized_capacity);
@@ -93,7 +93,7 @@ static void resize_file_descriptor() {
 
 static int get_empty_file_descriptor() {
     if (file_descriptor_count == file_descriptor_capacity)
-        resize_file_descriptor();
+        resize_file_descriptors();
     if (ufs_error_code != UFS_ERR_NO_ERR)
         return -1;
     int empty_fd = 0;
