@@ -79,10 +79,6 @@ ufs_errno() {
 
 static void resize_file_descriptor() {
     int64_t resized_capacity = max(32LL, 2LL * file_descriptor_capacity);
-    if (resized_capacity * 2 > INT_MAX) {
-        ufs_error_code = UFS_ERR_NO_MEM;
-        return;
-    }
     struct filedesc** resized_fd = realloc(file_descriptors, sizeof(struct filedesc*)
                                            * resized_capacity);
     if (!resized_fd) {
@@ -162,7 +158,7 @@ static void remove_file_from_list(struct file *file) {
 
 static void cleanup_blocks(struct file *file, size_t num_blocks) {
     size_t cleaned;
-    
+
     for (cleaned = 0; file->last_block != NULL
             && cleaned < num_blocks; ++cleaned) {
         struct block* prev_block = file->last_block->prev;
@@ -456,7 +452,7 @@ int ufs_resize(int fd, size_t new_size) {
         }
     }
 
-    if (ufs_error_code != UFS_ERR_NO_ERR) 
+    if (ufs_error_code != UFS_ERR_NO_ERR)
         return -1;
 
     if (fd_ptr->block != NULL) {
