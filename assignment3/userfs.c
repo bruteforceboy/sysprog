@@ -130,17 +130,17 @@ static void allocate_block(struct filedesc* fd_ptr) {
 }
 
 static void adjust_block_position(struct filedesc* fd_ptr) {
-    if (fd_ptr->file->block_count == 0) {
-        fd_ptr->block = NULL;
-        fd_ptr->block_id = 0;
-        fd_ptr->block_pos = 0;
-    } else {
+    if (fd_ptr->file->block_count != 0) {
         if (fd_ptr->block_id >= fd_ptr->file->block_count) {
             fd_ptr->block_id = fd_ptr->file->block_count - 1;
             fd_ptr->block = fd_ptr->file->last_block;
         }
         if ((int) fd_ptr->block_pos > fd_ptr->block->occupied)
             fd_ptr->block_pos = fd_ptr->block->occupied;
+    } else {
+        fd_ptr->block_id = 0;
+        fd_ptr->block_pos = 0;
+        fd_ptr->block = NULL;
     }
 }
 
@@ -367,8 +367,8 @@ ssize_t ufs_read(int fd, char *buf, size_t size) {
     while (read_total < size) {
         copy_from_current_block(fd_ptr, buf, &read_total, size);
         if (read_total == size || fd_ptr->block->next == NULL) break;
-        fd_ptr->block = fd_ptr->block->next;
         fd_ptr->block_pos = 0;
+        fd_ptr->block = fd_ptr->block->next;
     }
 
     return read_total;
