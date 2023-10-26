@@ -24,6 +24,9 @@
  * because it is used by tests.
  */
 
+#define NEED_OPEN_FLAGS
+// #define NEED_RESIZE
+
 /**
  * Flags for ufs_open call.
  */
