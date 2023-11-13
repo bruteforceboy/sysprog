@@ -1,6 +1,6 @@
 ## Assignment 4
 
-## added -Wimplicit-function-declaration flag
+added -Wimplicit-function-declaration flag
 
 ### To run: 
 <code>make</code> </br>
