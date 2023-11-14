@@ -247,26 +247,24 @@ int thread_task_timed_join(struct thread_task *task, double timeout, void **resu
     struct timespec tm;
     clock_gettime(CLOCK_MONOTONIC, &tm);
 
-    long nsec = max(0, timeout) * 1000000000;
-    tm.tv_nsec += nsec;
-    tm.tv_sec += tm.tv_nsec / 1000000000;
-    tm.tv_nsec %= 1000000000;
+#define NANO 1000000000
+
+    long ns = max(0, timeout) * NANO;
+    tm.tv_nsec += ns;
+    tm.tv_sec += tm.tv_nsec / NANO;
+    tm.tv_nsec %= NANO;
 
     pthread_mutex_lock(task->t_mutex);
-    bool failed = false;
     while (task->thread_value != THREAD_VAL_FINISHED) {
         if (pthread_cond_timedwait(task->t_cond, task->t_mutex,
                                    &tm) == ETIMEDOUT) {
-            failed = true;
-            break;
+            pthread_mutex_unlock(task->t_mutex);
+            return TPOOL_ERR_TIMEOUT;
         }
     }
 
     pthread_mutex_unlock(task->t_mutex);
 
-    if (failed) 
-        return TPOOL_ERR_TIMEOUT;
-    
     pthread_mutex_lock(task->t_mutex);
     --task->t_pool->task_count;
     pthread_mutex_unlock(task->t_mutex);
