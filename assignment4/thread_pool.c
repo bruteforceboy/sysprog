@@ -73,7 +73,7 @@ int thread_pool_thread_count(const struct thread_pool *pool) {
 
 int thread_pool_delete(struct thread_pool *pool) {
     pthread_mutex_lock(pool->p_mutex);
-    if (pool->task_count != 0) {
+    if (pool->task_count > 0) {
         pthread_mutex_unlock(pool->p_mutex);
         return TPOOL_ERR_HAS_TASKS;
     }
@@ -204,7 +204,10 @@ int thread_task_new(struct thread_task **task, thread_task_f function, void *arg
     (*task)->detached = 0;
 
     pthread_condattr_t attr;
+    pthread_condattr_init(&attr);
+    pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
     pthread_cond_init((*task)->t_cond, &attr);
+    pthread_condattr_destroy(&attr);
 
     (*task)->t_pool = NULL;
     (*task)->next_task = NULL;
@@ -243,13 +246,12 @@ int thread_task_join(struct thread_task *task, void **result) {
 
 int thread_task_timed_join(struct thread_task *task, double timeout, void **result) {
     if (!task->t_pool) return TPOOL_ERR_TASK_NOT_PUSHED;
-
-    struct timespec tm;
-    clock_gettime(CLOCK_MONOTONIC, &tm);
-
+    
 #define NANO 1000000000
 
     long ns = max(0, timeout) * NANO;
+    struct timespec tm;
+    clock_gettime(CLOCK_MONOTONIC, &tm);    
     tm.tv_nsec += ns;
     tm.tv_sec += tm.tv_nsec / NANO;
     tm.tv_nsec %= NANO;
@@ -302,6 +304,7 @@ int thread_task_detach(struct thread_task *task) {
         pthread_mutex_unlock(task->t_mutex);
         task->t_pool = NULL;
         thread_task_delete(task);
+        return 0;
     } else {
         task->detached = 1;
         pthread_mutex_unlock(task->t_mutex);
